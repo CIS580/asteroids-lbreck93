@@ -4,6 +4,7 @@
 /* Classes */
 const Game = require('./game.js');
 const Player = require('./player.js');
+// const Laser = require('./laser.js');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
@@ -20,7 +21,6 @@ var masterLoop = function(timestamp) {
   window.requestAnimationFrame(masterLoop);
 }
 masterLoop(performance.now());
-
 
 /**
  * @function update
@@ -69,7 +69,7 @@ function render(elapsedTime, ctx) {
   }
 }
 
-},{"./game.js":2,"./player.js":3}],2:[function(require,module,exports){
+},{"./game.js":2,"./player.js":4}],2:[function(require,module,exports){
 "use strict";
 
 /**
@@ -135,6 +135,73 @@ const MS_PER_FRAME = 1000 / 8;
 /**
  * @module exports the Player class
  */
+module.exports = exports = Laser;
+
+/**
+ * @constructor Player
+ * Creates a new player object
+ * @param {Postition} position object specifying an x and y
+ */
+function Laser(position, angle) {
+    this.position = {
+        x: position.x,
+        y: position.y
+    };
+    this.velocity = {
+        x: Math.cos(this.angle),
+        y: Math.sin(this.angle)
+    }
+    this.state = 'hot';
+    this.onscreen = true;
+    console.log('laser');
+  }
+
+/**
+ * @function updates the update object
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ */
+Laser.prototype.update = function(time){
+  switch (this.state) {
+    case "hot":
+    // move the laser
+    this.position.x += 15*(this.velocity.x);
+    this.position.y -= 15*(this.velocity.y);
+
+    //disappear if it goes off screen
+    if(this.position.x < 0) this.onscreen = false;
+    if(this.position.x > this.worldWidth) this.onScreen = false;
+    if(this.position.y < 0) this.onscreen = false;
+    if(this.position.y > this.worldHeight) this.onScreen = false;
+
+    break;
+  }
+}
+
+/**
+ * @function render the laser object
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ */
+Laser.prototype.render = function(time, ctx)
+{
+  // Draw a red line for the laser
+  ctx.strokeStyle = "Red";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(this.position.x, this.position.y);
+  ctx.lineTo(this.position.x + 15*(this.velocity.x), this.position.y - 15*(this.velocity.y));
+  ctx.stroke();
+  ctx.lineWidth = 1;
+}
+
+},{}],4:[function(require,module,exports){
+"use strict";
+
+const MS_PER_FRAME = 1000 / 8;
+const Laser = require('./laser.js');
+
+/**
+ * @module exports the Player class
+ */
 module.exports = exports = Player;
 
 /**
@@ -161,6 +228,7 @@ function Player(position, canvas) {
     this.steerRight = false;
     this.lives = 3;
     this.deaths = 0;
+    this.lasers = new Array();
 
     var self = this;
     window.onkeydown = function(event) {
@@ -177,6 +245,12 @@ function Player(position, canvas) {
             case 'd':
                 self.steerRight = true;
                 break;
+            case ' ':
+              if (self.state == 'idle'){
+                self.lasers.push(new Laser(self.position, self.angle));
+                self.state = 'firing';
+              }
+              break;
         }
     }
 
@@ -194,10 +268,15 @@ function Player(position, canvas) {
             case 'd':
                 self.steerRight = false;
                 break;
+            case ' ':
+              self.state = 'idle';
         }
     }
 }
 
+/**
+  * @function handles player death function.
+  */
 Player.prototype.death = function() {
     this.lives--;
     this.deaths++;
@@ -238,6 +317,10 @@ Player.prototype.update = function(time) {
     if (this.position.x > this.worldWidth) this.position.x -= this.worldWidth;
     if (this.position.y < 0) this.position.y += this.worldHeight;
     if (this.position.y > this.worldHeight) this.position.y -= this.worldHeight;
+
+    this.lasers.forEach(function(las){
+      las.update(time);
+    });
 }
 
 /**
@@ -271,6 +354,10 @@ Player.prototype.render = function(time, ctx) {
         ctx.stroke();
     }
     ctx.restore();
+
+    this.lasers.forEach(function(las){
+      las.render(time, ctx);
+    })
 }
 
-},{}]},{},[1]);
+},{"./laser.js":3}]},{},[1]);

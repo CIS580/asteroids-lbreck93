@@ -3,6 +3,7 @@
 /* Classes */
 const Game = require('./game.js');
 const Player = require('./player.js');
+// const Laser = require('./laser.js');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
@@ -19,7 +20,6 @@ var masterLoop = function(timestamp) {
   window.requestAnimationFrame(masterLoop);
 }
 masterLoop(performance.now());
-
 
 /**
  * @function update

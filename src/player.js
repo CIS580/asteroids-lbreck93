@@ -1,6 +1,7 @@
 "use strict";
 
 const MS_PER_FRAME = 1000 / 8;
+const Laser = require('./laser.js');
 
 /**
  * @module exports the Player class
@@ -31,6 +32,7 @@ function Player(position, canvas) {
     this.steerRight = false;
     this.lives = 3;
     this.deaths = 0;
+    this.lasers = new Array();
 
     var self = this;
     window.onkeydown = function(event) {
@@ -47,6 +49,12 @@ function Player(position, canvas) {
             case 'd':
                 self.steerRight = true;
                 break;
+            case ' ':
+              if (self.state == 'idle'){
+                self.lasers.push(new Laser(self.position, self.angle));
+                self.state = 'firing';
+              }
+              break;
         }
     }
 
@@ -64,10 +72,15 @@ function Player(position, canvas) {
             case 'd':
                 self.steerRight = false;
                 break;
+            case ' ':
+              self.state = 'idle';
         }
     }
 }
 
+/**
+  * @function handles player death function.
+  */
 Player.prototype.death = function() {
     this.lives--;
     this.deaths++;
@@ -108,6 +121,10 @@ Player.prototype.update = function(time) {
     if (this.position.x > this.worldWidth) this.position.x -= this.worldWidth;
     if (this.position.y < 0) this.position.y += this.worldHeight;
     if (this.position.y > this.worldHeight) this.position.y -= this.worldHeight;
+
+    this.lasers.forEach(function(las){
+      las.update(time);
+    });
 }
 
 /**
@@ -141,4 +158,8 @@ Player.prototype.render = function(time, ctx) {
         ctx.stroke();
     }
     ctx.restore();
+
+    this.lasers.forEach(function(las){
+      las.render(time, ctx);
+    })
 }
