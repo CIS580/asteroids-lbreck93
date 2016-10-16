@@ -45,4 +45,25 @@ function render(elapsedTime, ctx) {
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   player.render(elapsedTime, ctx);
+
+  var padding = 33*player.lives;
+  x = canvas.width-padding;
+  y = canvas.height-30;
+  for (var i = 0; i < player.lives; i++){
+    ctx.beginPath();
+    ctx.moveTo(x, y-10);
+    ctx.lineTo(x-10, y+10);
+    ctx.lineTo(x, y);
+    ctx.lineTo(x+10, y+10);
+    ctx.closePath();
+    if (i < player.deaths){
+      ctx.strokeStyle = '#DD4A68';
+    }
+    else{
+      ctx.strokeStyle = '#0095DD';
+    }
+
+    ctx.stroke();
+    x = x + 35;
+  }
 }
