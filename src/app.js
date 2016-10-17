@@ -3,7 +3,7 @@
 /* Classes */
 const Game = require('./game.js');
 const Player = require('./player.js');
-// const Laser = require('./laser.js');
+const Laser = require('./laser.js');
 
 /* Global variables */
 var canvas = document.getElementById('screen');

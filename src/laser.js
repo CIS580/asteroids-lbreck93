@@ -18,12 +18,10 @@ function Laser(position, angle) {
         y: position.y
     };
     this.velocity = {
-        x: Math.cos(this.angle),
-        y: Math.sin(this.angle)
+        x: Math.cos(angle),
+        y: Math.sin(angle)
     }
     this.state = 'hot';
-    this.onscreen = true;
-    console.log('laser');
   }
 
 /**
@@ -38,11 +36,10 @@ Laser.prototype.update = function(time){
     this.position.y -= 15*(this.velocity.y);
 
     //disappear if it goes off screen
-    if(this.position.x < 0) this.onscreen = false;
-    if(this.position.x > this.worldWidth) this.onScreen = false;
-    if(this.position.y < 0) this.onscreen = false;
-    if(this.position.y > this.worldHeight) this.onScreen = false;
-
+    if(this.position.x < 0) this.state = 'cold';
+    if(this.position.x > this.worldWidth) this.state = 'cold';
+    if(this.position.y < 0) this.state = 'cold';
+    if(this.position.y > this.worldHeight) this.state = 'cold';
     break;
   }
 }
@@ -53,12 +50,13 @@ Laser.prototype.update = function(time){
  */
 Laser.prototype.render = function(time, ctx)
 {
-  // Draw a red line for the laser
-  ctx.strokeStyle = "Red";
+  ctx.save()
+  // Draw a line for the laser
+  ctx.strokeStyle = "green";
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(this.position.x, this.position.y);
   ctx.lineTo(this.position.x + 15*(this.velocity.x), this.position.y - 15*(this.velocity.y));
   ctx.stroke();
-  ctx.lineWidth = 1;
+  ctx.restore();
 }

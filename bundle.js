@@ -4,7 +4,7 @@
 /* Classes */
 const Game = require('./game.js');
 const Player = require('./player.js');
-// const Laser = require('./laser.js');
+const Laser = require('./laser.js');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
@@ -69,7 +69,7 @@ function render(elapsedTime, ctx) {
   }
 }
 
-},{"./game.js":2,"./player.js":4}],2:[function(require,module,exports){
+},{"./game.js":2,"./laser.js":3,"./player.js":4}],2:[function(require,module,exports){
 "use strict";
 
 /**
@@ -148,12 +148,10 @@ function Laser(position, angle) {
         y: position.y
     };
     this.velocity = {
-        x: Math.cos(this.angle),
-        y: Math.sin(this.angle)
+        x: Math.cos(angle),
+        y: Math.sin(angle)
     }
     this.state = 'hot';
-    this.onscreen = true;
-    console.log('laser');
   }
 
 /**
@@ -168,11 +166,10 @@ Laser.prototype.update = function(time){
     this.position.y -= 15*(this.velocity.y);
 
     //disappear if it goes off screen
-    if(this.position.x < 0) this.onscreen = false;
-    if(this.position.x > this.worldWidth) this.onScreen = false;
-    if(this.position.y < 0) this.onscreen = false;
-    if(this.position.y > this.worldHeight) this.onScreen = false;
-
+    if(this.position.x < 0) this.state = 'cold';
+    if(this.position.x > this.worldWidth) this.state = 'cold';
+    if(this.position.y < 0) this.state = 'cold';
+    if(this.position.y > this.worldHeight) this.state = 'cold';
     break;
   }
 }
@@ -183,14 +180,15 @@ Laser.prototype.update = function(time){
  */
 Laser.prototype.render = function(time, ctx)
 {
-  // Draw a red line for the laser
-  ctx.strokeStyle = "Red";
+  ctx.save()
+  // Draw a line for the laser
+  ctx.strokeStyle = "green";
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(this.position.x, this.position.y);
   ctx.lineTo(this.position.x + 15*(this.velocity.x), this.position.y - 15*(this.velocity.y));
   ctx.stroke();
-  ctx.lineWidth = 1;
+  ctx.restore();
 }
 
 },{}],4:[function(require,module,exports){
@@ -233,9 +231,17 @@ function Player(position, canvas) {
     var self = this;
     window.onkeydown = function(event) {
         switch (event.key) {
+            case 'e': // e for emergency break
+              self.thrusting = false;
+              self.velocity.x = 0;
+              self.velocity.y = 0;
+              self.state = 'ebreak';
+              break;
             case 'ArrowUp': // up
             case 'w':
-                self.thrusting = true;
+                if (self.state != 'ebreak'){
+                  self.thrusting = true;
+                }
                 break;
             case 'ArrowLeft': // left
             case 'a':
@@ -247,7 +253,7 @@ function Player(position, canvas) {
                 break;
             case ' ':
               if (self.state == 'idle'){
-                self.lasers.push(new Laser(self.position, self.angle));
+                self.lasers.push(new Laser(self.position, self.angle+1.575));
                 self.state = 'firing';
               }
               break;
@@ -256,6 +262,9 @@ function Player(position, canvas) {
 
     window.onkeyup = function(event) {
         switch (event.key) {
+            case 'e': // e for emergency break
+              self.state = 'idle';
+              break;
             case 'ArrowUp': // up
             case 'w':
                 self.thrusting = false;
@@ -269,6 +278,7 @@ function Player(position, canvas) {
                 self.steerRight = false;
                 break;
             case ' ':
+              // console.log('can fire again.');
               self.state = 'idle';
         }
     }
@@ -321,6 +331,12 @@ Player.prototype.update = function(time) {
     this.lasers.forEach(function(las){
       las.update(time);
     });
+
+    for(var i = 0; i < this.lasers.length; i++){
+      if (this.lasers[i].state == 'cold'){
+        this.lasers.splice(i, 1);
+      }
+    }
 }
 
 /**

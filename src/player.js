@@ -37,9 +37,17 @@ function Player(position, canvas) {
     var self = this;
     window.onkeydown = function(event) {
         switch (event.key) {
+            case 'e': // e for emergency break
+              self.thrusting = false;
+              self.velocity.x = 0;
+              self.velocity.y = 0;
+              self.state = 'ebreak';
+              break;
             case 'ArrowUp': // up
             case 'w':
-                self.thrusting = true;
+                if (self.state != 'ebreak'){
+                  self.thrusting = true;
+                }
                 break;
             case 'ArrowLeft': // left
             case 'a':
@@ -51,7 +59,7 @@ function Player(position, canvas) {
                 break;
             case ' ':
               if (self.state == 'idle'){
-                self.lasers.push(new Laser(self.position, self.angle));
+                self.lasers.push(new Laser(self.position, self.angle+1.575));
                 self.state = 'firing';
               }
               break;
@@ -60,6 +68,9 @@ function Player(position, canvas) {
 
     window.onkeyup = function(event) {
         switch (event.key) {
+            case 'e': // e for emergency break
+              self.state = 'idle';
+              break;
             case 'ArrowUp': // up
             case 'w':
                 self.thrusting = false;
@@ -73,6 +84,7 @@ function Player(position, canvas) {
                 self.steerRight = false;
                 break;
             case ' ':
+              // console.log('can fire again.');
               self.state = 'idle';
         }
     }
@@ -125,6 +137,12 @@ Player.prototype.update = function(time) {
     this.lasers.forEach(function(las){
       las.update(time);
     });
+
+    for(var i = 0; i < this.lasers.length; i++){
+      if (this.lasers[i].state == 'cold'){
+        this.lasers.splice(i, 1);
+      }
+    }
 }
 
 /**
