@@ -13,6 +13,8 @@ module.exports = exports = Laser;
  * @param {Postition} position object specifying an x and y
  */
 function Laser(position, angle) {
+    this.width = 3;
+    this.height = 15;
     this.position = {
         x: position.x,
         y: position.y

@@ -26,6 +26,15 @@ var masterLoop = function(timestamp) {
 }
 masterLoop(performance.now());
 
+function collisionCheck(entity1, entity2) {
+  return !(
+      ((entity1.position.y + entity1.height) < (entity2.position.y)) ||
+      (entity1.position.y > (entity2.position.y + entity2.height)) ||
+      ((entity1.position.x + entity1.width) < entity2.position.x) ||
+      (entity1.position.x > entity2.position.x + entity2.width)
+      );
+  }
+
 /**
  * @function update
  * Updates the game state, moving
@@ -37,6 +46,21 @@ masterLoop(performance.now());
 function update(elapsedTime) {
   player.update(elapsedTime);
   asteroid.update(elapsedTime);
+  if (collisionCheck(player, asteroid)){
+      console.log('going down!');
+  }
+  // player.lasers.forEach(function(las){
+  //   // console.log(player.lasers);
+  //   if (collisionCheck(las, asteroid)){
+  //     console.log('contact!');
+  //   }
+  //   else{
+  //     // console.log('no contact.');
+  //   }
+    // asteroids.foreach(function(ast){
+    //   collisionCheck(las, ast);
+    // });
+// });
   // TODO: Update the game objects
 }
 
@@ -104,8 +128,8 @@ function Astroid(position, canvas, mass, angle) {
   }
   this.angle = 0;
   this.radius  = 32;
-  this.height = 64;
-  this.width = 64;
+  this.height = this.radius*2;
+  this.width = this.radius*2;
   this.mass = mass;
 }
 
@@ -140,7 +164,7 @@ Astroid.prototype.render = function(time, ctx) {
   ctx.save()
   ctx.beginPath();
   ctx.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI, false);
-  ctx.fillStyle = '';
+  ctx.fillStyle = 'rgba(0,0,0,0)';
   ctx.fill();
   ctx.strokeStyle = 'orange';
   ctx.stroke();
@@ -221,6 +245,8 @@ module.exports = exports = Laser;
  * @param {Postition} position object specifying an x and y
  */
 function Laser(position, angle) {
+    this.width = 3;
+    this.height = 15;
     this.position = {
         x: position.x,
         y: position.y

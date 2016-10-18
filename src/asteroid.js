@@ -26,8 +26,8 @@ function Astroid(position, canvas, mass, angle) {
   }
   this.angle = 0;
   this.radius  = 32;
-  this.height = 64;
-  this.width = 64;
+  this.height = this.radius*2;
+  this.width = this.radius*2;
   this.mass = mass;
 }
 
@@ -62,7 +62,7 @@ Astroid.prototype.render = function(time, ctx) {
   ctx.save()
   ctx.beginPath();
   ctx.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI, false);
-  ctx.fillStyle = '';
+  ctx.fillStyle = 'rgba(0,0,0,0)';
   ctx.fill();
   ctx.strokeStyle = 'orange';
   ctx.stroke();

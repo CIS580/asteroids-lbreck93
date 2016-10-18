@@ -25,6 +25,15 @@ var masterLoop = function(timestamp) {
 }
 masterLoop(performance.now());
 
+function collisionCheck(entity1, entity2) {
+  return !(
+      ((entity1.position.y + entity1.height) < (entity2.position.y)) ||
+      (entity1.position.y > (entity2.position.y + entity2.height)) ||
+      ((entity1.position.x + entity1.width) < entity2.position.x) ||
+      (entity1.position.x > entity2.position.x + entity2.width)
+      );
+  }
+
 /**
  * @function update
  * Updates the game state, moving
@@ -36,6 +45,21 @@ masterLoop(performance.now());
 function update(elapsedTime) {
   player.update(elapsedTime);
   asteroid.update(elapsedTime);
+  if (collisionCheck(player, asteroid)){
+      console.log('going down!');
+  }
+  // player.lasers.forEach(function(las){
+  //   // console.log(player.lasers);
+  //   if (collisionCheck(las, asteroid)){
+  //     console.log('contact!');
+  //   }
+  //   else{
+  //     // console.log('no contact.');
+  //   }
+    // asteroids.foreach(function(ast){
+    //   collisionCheck(las, ast);
+    // });
+// });
   // TODO: Update the game objects
 }
 
