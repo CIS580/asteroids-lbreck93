@@ -4,11 +4,15 @@
 const Game = require('./game.js');
 const Player = require('./player.js');
 const Laser = require('./laser.js');
+const Asteroid = require('./asteroid.js')
 
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 var player = new Player({x: canvas.width/2, y: canvas.height/2}, canvas);
+// var asteroids = new Array();
+var asteroid = new Asteroid({x: canvas.width/6, y: canvas.height/2}, canvas,
+5, 0);
 
 /**
  * @function masterLoop
@@ -31,6 +35,7 @@ masterLoop(performance.now());
  */
 function update(elapsedTime) {
   player.update(elapsedTime);
+  asteroid.update(elapsedTime);
   // TODO: Update the game objects
 }
 
@@ -45,6 +50,7 @@ function render(elapsedTime, ctx) {
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   player.render(elapsedTime, ctx);
+  asteroid.render(elapsedTime, ctx);
 
   var padding = 33*player.lives;
   x = canvas.width-padding;

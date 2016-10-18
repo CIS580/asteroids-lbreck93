@@ -5,11 +5,15 @@
 const Game = require('./game.js');
 const Player = require('./player.js');
 const Laser = require('./laser.js');
+const Asteroid = require('./asteroid.js')
 
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 var player = new Player({x: canvas.width/2, y: canvas.height/2}, canvas);
+// var asteroids = new Array();
+var asteroid = new Asteroid({x: canvas.width/6, y: canvas.height/2}, canvas,
+5, 0);
 
 /**
  * @function masterLoop
@@ -32,6 +36,7 @@ masterLoop(performance.now());
  */
 function update(elapsedTime) {
   player.update(elapsedTime);
+  asteroid.update(elapsedTime);
   // TODO: Update the game objects
 }
 
@@ -46,6 +51,7 @@ function render(elapsedTime, ctx) {
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   player.render(elapsedTime, ctx);
+  asteroid.render(elapsedTime, ctx);
 
   var padding = 33*player.lives;
   x = canvas.width-padding;
@@ -69,7 +75,79 @@ function render(elapsedTime, ctx) {
   }
 }
 
-},{"./game.js":2,"./laser.js":3,"./player.js":4}],2:[function(require,module,exports){
+},{"./asteroid.js":2,"./game.js":3,"./laser.js":4,"./player.js":5}],2:[function(require,module,exports){
+"use strict";
+
+const MS_PER_FRAME = 1000/8;
+
+/**
+ * @module exports the Asteroid class
+ */
+module.exports = exports = Astroid;
+
+/**
+ * @constructor Asteroid
+ * Creates a new asteroid object
+ * @param {Postition} position object specifying an x and y
+ */
+function Astroid(position, canvas, mass, angle) {
+  this.worldWidth = canvas.width;
+  this.worldHeight = canvas.height;
+  this.state = 'idle';
+  this.position = {
+    x: position.x,
+    y: position.y
+  };
+  this.velocity = {
+    x: 2,
+    y: 3
+  }
+  this.angle = 0;
+  this.radius  = 32;
+  this.height = 64;
+  this.width = 64;
+  this.mass = mass;
+}
+
+/**
+ * @function updates the asteroid object
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ */
+Astroid.prototype.update = function(time) {
+  // var acceleration = {
+  //     x: Math.sin(this.angle),
+  //     y: Math.cos(this.angle)
+  // }
+  // this.velocity.x -= acceleration.x;
+  // this.velocity.y -= acceleration.y;
+  // Apply velocity
+  this.position.x += this.velocity.x;
+  this.position.y += this.velocity.y;
+  // Wrap around the screen
+  if(this.position.x < 0) this.position.x += this.worldWidth;
+  if(this.position.x > this.worldWidth) this.position.x -= this.worldWidth;
+  if(this.position.y < 0) this.position.y += this.worldHeight;
+  if(this.position.y > this.worldHeight) this.position.y -= this.worldHeight;
+}
+
+/**
+ * @function renders the asteroid into the provided context
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ * {CanvasRenderingContext2D} ctx the context to render into
+ */
+Astroid.prototype.render = function(time, ctx) {
+  // ctx.translate(this.position.x, this.position.y);
+  ctx.save()
+  ctx.beginPath();
+  ctx.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI, false);
+  ctx.fillStyle = '';
+  ctx.fill();
+  ctx.strokeStyle = 'orange';
+  ctx.stroke();
+  ctx.restore();
+  }
+
+},{}],3:[function(require,module,exports){
 "use strict";
 
 /**
@@ -127,19 +205,19 @@ Game.prototype.loop = function(newTime) {
   this.frontCtx.drawImage(this.backBuffer, 0, 0);
 }
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 "use strict";
 
 const MS_PER_FRAME = 1000 / 8;
 
 /**
- * @module exports the Player class
+ * @module exports the laser class
  */
 module.exports = exports = Laser;
 
 /**
- * @constructor Player
- * Creates a new player object
+ * @constructor Laser
+ * Creates a new laser object
  * @param {Postition} position object specifying an x and y
  */
 function Laser(position, angle) {
@@ -191,7 +269,7 @@ Laser.prototype.render = function(time, ctx)
   ctx.restore();
 }
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict";
 
 const MS_PER_FRAME = 1000 / 8;
@@ -376,4 +454,4 @@ Player.prototype.render = function(time, ctx) {
     })
 }
 
-},{"./laser.js":3}]},{},[1]);
+},{"./laser.js":4}]},{},[1]);

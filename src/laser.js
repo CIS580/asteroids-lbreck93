@@ -3,13 +3,13 @@
 const MS_PER_FRAME = 1000 / 8;
 
 /**
- * @module exports the Player class
+ * @module exports the laser class
  */
 module.exports = exports = Laser;
 
 /**
- * @constructor Player
- * Creates a new player object
+ * @constructor Laser
+ * Creates a new laser object
  * @param {Postition} position object specifying an x and y
  */
 function Laser(position, angle) {
