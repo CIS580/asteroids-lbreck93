@@ -4,15 +4,19 @@
 const Game = require('./game.js');
 const Player = require('./player.js');
 const Laser = require('./laser.js');
-const Asteroid = require('./asteroid.js')
+const Astroid = require('./astroid.js')
 
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 var player = new Player({x: canvas.width/2, y: canvas.height/2}, canvas);
-// var asteroids = new Array();
-var asteroid = new Asteroid({x: canvas.width/6, y: canvas.height/2}, canvas,
-5, 0);
+var astroids = new Array();
+for (var i=0; i<3; i++){
+  astroids.push(
+    new Astroid(
+      {x: getRand(0, canvas.width), y: getRand(0, canvas.height)},
+       canvas, getRand(0, 1)));
+}
 
 /**
  * @function masterLoop
@@ -31,8 +35,18 @@ function collisionCheck(entity1, entity2) {
       (entity1.position.y > (entity2.position.y + entity2.height)) ||
       ((entity1.position.x + entity1.width) < entity2.position.x) ||
       (entity1.position.x > entity2.position.x + entity2.width)
-      );
+    );
   }
+
+function getRand(min, max){
+  return Math.round(Math.random() * (max - min) + min);
+}
+
+function reset(){
+  player.reset();
+  // astroids = new Astroid(
+  //   {x: getRand(0, canvas.width), y: getRand(0, canvas.height)}, canvas, 3);
+}
 
 /**
  * @function update
@@ -44,19 +58,48 @@ function collisionCheck(entity1, entity2) {
  */
 function update(elapsedTime) {
   player.update(elapsedTime);
-  asteroid.update(elapsedTime);
-  if (collisionCheck(player, asteroid)){
-      console.log('going down!');
+  for(var i = 0; i < astroids.length; i++){
+    astroids[i].update(elapsedTime);
   }
+
+  //checks to see if laser has collided with astroid
+  for(var i = 0; i < player.lasers.length; i++){
+    for (var j = 0; j < astroids.length; j++){
+      if (collisionCheck(player.lasers[i], astroids[j])){
+        player.lasers.splice(i, 1);
+        if (astroids[j].break()){
+          astroids.splice(j, 1);
+        }
+        else{
+          astroids[j].velocity.x = -astroids[j].velocity.x;
+          astroids[j].velocity.y = -astroids[j].velocity.y;
+        }//end collision check player-astroid
+        console.log('player shot astroid');
+        break;
+      }//end if-collisionCheck
+    }//end for-astroid array
+  }//end for-laser array
+
+  // if (collisionCheck(player, astroid)){
+  //     if (player.death()){
+  //       console.log('gameover');
+  //       return;
+  //     }
+  //     else{
+  //       console.log('contact!')
+  //       reset();
+  //
+  //     }
+  // }
   // player.lasers.forEach(function(las){
   //   // console.log(player.lasers);
-  //   if (collisionCheck(las, asteroid)){
+  //   if (collisionCheck(las, astroid)){
   //     console.log('contact!');
   //   }
   //   else{
   //     // console.log('no contact.');
   //   }
-    // asteroids.foreach(function(ast){
+    // astroids.foreach(function(ast){
     //   collisionCheck(las, ast);
     // });
 // });
@@ -74,7 +117,11 @@ function render(elapsedTime, ctx) {
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   player.render(elapsedTime, ctx);
-  asteroid.render(elapsedTime, ctx);
+  for(var i = 0; i < astroids.length; i++){
+    astroids[i].render(elapsedTime, ctx);
+  }
+
+  // astroid.render(elapsedTime, ctx);
 
   var padding = 33*player.lives;
   x = canvas.width-padding;

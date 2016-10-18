@@ -5,15 +5,19 @@
 const Game = require('./game.js');
 const Player = require('./player.js');
 const Laser = require('./laser.js');
-const Asteroid = require('./asteroid.js')
+const Astroid = require('./astroid.js')
 
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 var player = new Player({x: canvas.width/2, y: canvas.height/2}, canvas);
-// var asteroids = new Array();
-var asteroid = new Asteroid({x: canvas.width/6, y: canvas.height/2}, canvas,
-5, 0);
+var astroids = new Array();
+for (var i=0; i<3; i++){
+  astroids.push(
+    new Astroid(
+      {x: getRand(0, canvas.width), y: getRand(0, canvas.height)},
+       canvas, getRand(0, 1)));
+}
 
 /**
  * @function masterLoop
@@ -32,8 +36,18 @@ function collisionCheck(entity1, entity2) {
       (entity1.position.y > (entity2.position.y + entity2.height)) ||
       ((entity1.position.x + entity1.width) < entity2.position.x) ||
       (entity1.position.x > entity2.position.x + entity2.width)
-      );
+    );
   }
+
+function getRand(min, max){
+  return Math.round(Math.random() * (max - min) + min);
+}
+
+function reset(){
+  player.reset();
+  // astroids = new Astroid(
+  //   {x: getRand(0, canvas.width), y: getRand(0, canvas.height)}, canvas, 3);
+}
 
 /**
  * @function update
@@ -45,19 +59,48 @@ function collisionCheck(entity1, entity2) {
  */
 function update(elapsedTime) {
   player.update(elapsedTime);
-  asteroid.update(elapsedTime);
-  if (collisionCheck(player, asteroid)){
-      console.log('going down!');
+  for(var i = 0; i < astroids.length; i++){
+    astroids[i].update(elapsedTime);
   }
+
+  //checks to see if laser has collided with astroid
+  for(var i = 0; i < player.lasers.length; i++){
+    for (var j = 0; j < astroids.length; j++){
+      if (collisionCheck(player.lasers[i], astroids[j])){
+        player.lasers.splice(i, 1);
+        if (astroids[j].break()){
+          astroids.splice(j, 1);
+        }
+        else{
+          astroids[j].velocity.x = -astroids[j].velocity.x;
+          astroids[j].velocity.y = -astroids[j].velocity.y;
+        }//end collision check player-astroid
+        console.log('player shot astroid');
+        break;
+      }//end if-collisionCheck
+    }//end for-astroid array
+  }//end for-laser array
+
+  // if (collisionCheck(player, astroid)){
+  //     if (player.death()){
+  //       console.log('gameover');
+  //       return;
+  //     }
+  //     else{
+  //       console.log('contact!')
+  //       reset();
+  //
+  //     }
+  // }
   // player.lasers.forEach(function(las){
   //   // console.log(player.lasers);
-  //   if (collisionCheck(las, asteroid)){
+  //   if (collisionCheck(las, astroid)){
   //     console.log('contact!');
   //   }
   //   else{
   //     // console.log('no contact.');
   //   }
-    // asteroids.foreach(function(ast){
+    // astroids.foreach(function(ast){
     //   collisionCheck(las, ast);
     // });
 // });
@@ -75,7 +118,11 @@ function render(elapsedTime, ctx) {
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   player.render(elapsedTime, ctx);
-  asteroid.render(elapsedTime, ctx);
+  for(var i = 0; i < astroids.length; i++){
+    astroids[i].render(elapsedTime, ctx);
+  }
+
+  // astroid.render(elapsedTime, ctx);
 
   var padding = 33*player.lives;
   x = canvas.width-padding;
@@ -99,22 +146,22 @@ function render(elapsedTime, ctx) {
   }
 }
 
-},{"./asteroid.js":2,"./game.js":3,"./laser.js":4,"./player.js":5}],2:[function(require,module,exports){
+},{"./astroid.js":2,"./game.js":3,"./laser.js":4,"./player.js":5}],2:[function(require,module,exports){
 "use strict";
 
 const MS_PER_FRAME = 1000/8;
 
 /**
- * @module exports the Asteroid class
+ * @module exports the Astroid class
  */
 module.exports = exports = Astroid;
 
 /**
- * @constructor Asteroid
- * Creates a new asteroid object
+ * @constructor Astroid
+ * Creates a new astroid object
  * @param {Postition} position object specifying an x and y
  */
-function Astroid(position, canvas, mass, angle) {
+function Astroid(position, canvas, mass) {
   this.worldWidth = canvas.width;
   this.worldHeight = canvas.height;
   this.state = 'idle';
@@ -127,14 +174,37 @@ function Astroid(position, canvas, mass, angle) {
     y: 3
   }
   this.angle = 0;
-  this.radius  = 32;
+  this.mass = mass;
+  this.setProperties();
+}
+
+Astroid.prototype.setProperties = function(){
+  switch (this.mass) {
+    case 0:
+      this.radius = 16;
+      break;
+    case 1:
+      this.radius = 32;
+      break;
+  }
   this.height = this.radius*2;
   this.width = this.radius*2;
-  this.mass = mass;
+}
+
+Astroid.prototype.break = function(){
+  this.mass--;
+  if (this.mass < 0){
+    return true;
+  }
+  else{
+    this.status = 'breaking';
+    this.setProperties();
+    return false;
+  }
 }
 
 /**
- * @function updates the asteroid object
+ * @function updates the astroid object
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 Astroid.prototype.update = function(time) {
@@ -155,20 +225,22 @@ Astroid.prototype.update = function(time) {
 }
 
 /**
- * @function renders the asteroid into the provided context
+ * @function renders the astroid into the provided context
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Astroid.prototype.render = function(time, ctx) {
   // ctx.translate(this.position.x, this.position.y);
-  ctx.save()
+  ctx.save();
   ctx.beginPath();
   ctx.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI, false);
   ctx.fillStyle = 'rgba(0,0,0,0)';
   ctx.fill();
   ctx.strokeStyle = 'orange';
+  ctx.rect(this.position.x-this.radius, this.position.y-this.radius, this.width, this.height);
   ctx.stroke();
   ctx.restore();
+
   }
 
 },{}],3:[function(require,module,exports){
@@ -283,7 +355,7 @@ Laser.prototype.update = function(time){
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 Laser.prototype.render = function(time, ctx)
-{
+{ 
   ctx.save()
   // Draw a line for the laser
   ctx.strokeStyle = "green";
@@ -324,7 +396,9 @@ function Player(position, canvas) {
         y: 0
     }
     this.angle = 0;
-    this.radius = 64;
+    this.radius = 20;
+    this.height = this.radius;
+    this.width = this.radius;
     this.thrusting = false;
     this.steerLeft = false;
     this.steerRight = false;
@@ -343,19 +417,23 @@ function Player(position, canvas) {
               break;
             case 'ArrowUp': // up
             case 'w':
+                event.preventDefault();
                 if (self.state != 'ebreak'){
                   self.thrusting = true;
                 }
                 break;
             case 'ArrowLeft': // left
             case 'a':
+              event.preventDefault();
                 self.steerLeft = true;
                 break;
             case 'ArrowRight': // right
             case 'd':
+              event.preventDefault();
                 self.steerRight = true;
                 break;
             case ' ':
+              event.preventDefault();
               if (self.state == 'idle'){
                 self.lasers.push(new Laser(self.position, self.angle+1.575));
                 self.state = 'firing';
@@ -392,15 +470,23 @@ function Player(position, canvas) {
   * @function handles player death function.
   */
 Player.prototype.death = function() {
-    this.lives--;
+    this.state = 'dead';
     this.deaths++;
-    if (lives == 0) {
+    if (this.lives == this.deaths) {
         return true
     }
     return false;
 }
 
-
+Player.prototype.reset = function(){
+  this.position = {x: this.worldWidth/2, y: this.worldHeight/2};
+  this.velocity = {x: 0, y: 0};
+  this.angle = 0;
+  this.thrusting = false;
+  this.steerRight = false;
+  this.steerLeft = false;
+  this.lasers = new Array();
+}
 
 /**
  * @function updates the player object
@@ -436,11 +522,16 @@ Player.prototype.update = function(time) {
       las.update(time);
     });
 
-    for(var i = 0; i < this.lasers.length; i++){
-      if (this.lasers[i].state == 'cold'){
-        this.lasers.splice(i, 1);
-      }
-    }
+    //remove laser from game.
+    // for(var i = 0; i < this.lasers.length; i++){
+    //   if (this.lasers[i].state == 'cold'){
+    //     this.removeLaser(i);
+    //   }
+    // }
+}
+
+Player.prototype.removeLaser = function(i){
+  this.lasers.splice(i, 1);
 }
 
 /**
@@ -474,6 +565,10 @@ Player.prototype.render = function(time, ctx) {
         ctx.stroke();
     }
     ctx.restore();
+
+    // ctx.strokeStyle = 'yellow';
+    // ctx.rect(this.position.x-this.radius/2, this.position.y-this.radius/2, this.width, this.height);
+    // ctx.stroke();
 
     this.lasers.forEach(function(las){
       las.render(time, ctx);

@@ -26,7 +26,9 @@ function Player(position, canvas) {
         y: 0
     }
     this.angle = 0;
-    this.radius = 64;
+    this.radius = 20;
+    this.height = this.radius;
+    this.width = this.radius;
     this.thrusting = false;
     this.steerLeft = false;
     this.steerRight = false;
@@ -45,19 +47,23 @@ function Player(position, canvas) {
               break;
             case 'ArrowUp': // up
             case 'w':
+                event.preventDefault();
                 if (self.state != 'ebreak'){
                   self.thrusting = true;
                 }
                 break;
             case 'ArrowLeft': // left
             case 'a':
+              event.preventDefault();
                 self.steerLeft = true;
                 break;
             case 'ArrowRight': // right
             case 'd':
+              event.preventDefault();
                 self.steerRight = true;
                 break;
             case ' ':
+              event.preventDefault();
               if (self.state == 'idle'){
                 self.lasers.push(new Laser(self.position, self.angle+1.575));
                 self.state = 'firing';
@@ -94,15 +100,23 @@ function Player(position, canvas) {
   * @function handles player death function.
   */
 Player.prototype.death = function() {
-    this.lives--;
+    this.state = 'dead';
     this.deaths++;
-    if (lives == 0) {
+    if (this.lives == this.deaths) {
         return true
     }
     return false;
 }
 
-
+Player.prototype.reset = function(){
+  this.position = {x: this.worldWidth/2, y: this.worldHeight/2};
+  this.velocity = {x: 0, y: 0};
+  this.angle = 0;
+  this.thrusting = false;
+  this.steerRight = false;
+  this.steerLeft = false;
+  this.lasers = new Array();
+}
 
 /**
  * @function updates the player object
@@ -138,11 +152,16 @@ Player.prototype.update = function(time) {
       las.update(time);
     });
 
-    for(var i = 0; i < this.lasers.length; i++){
-      if (this.lasers[i].state == 'cold'){
-        this.lasers.splice(i, 1);
-      }
-    }
+    //remove laser from game.
+    // for(var i = 0; i < this.lasers.length; i++){
+    //   if (this.lasers[i].state == 'cold'){
+    //     this.removeLaser(i);
+    //   }
+    // }
+}
+
+Player.prototype.removeLaser = function(i){
+  this.lasers.splice(i, 1);
 }
 
 /**
@@ -176,6 +195,10 @@ Player.prototype.render = function(time, ctx) {
         ctx.stroke();
     }
     ctx.restore();
+
+    // ctx.strokeStyle = 'yellow';
+    // ctx.rect(this.position.x-this.radius/2, this.position.y-this.radius/2, this.width, this.height);
+    // ctx.stroke();
 
     this.lasers.forEach(function(las){
       las.render(time, ctx);

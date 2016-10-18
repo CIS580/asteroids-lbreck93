@@ -51,7 +51,7 @@ Laser.prototype.update = function(time){
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 Laser.prototype.render = function(time, ctx)
-{
+{ 
   ctx.save()
   // Draw a line for the laser
   ctx.strokeStyle = "green";

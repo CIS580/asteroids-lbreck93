@@ -3,16 +3,16 @@
 const MS_PER_FRAME = 1000/8;
 
 /**
- * @module exports the Asteroid class
+ * @module exports the Astroid class
  */
 module.exports = exports = Astroid;
 
 /**
- * @constructor Asteroid
- * Creates a new asteroid object
+ * @constructor Astroid
+ * Creates a new astroid object
  * @param {Postition} position object specifying an x and y
  */
-function Astroid(position, canvas, mass, angle) {
+function Astroid(position, canvas, mass) {
   this.worldWidth = canvas.width;
   this.worldHeight = canvas.height;
   this.state = 'idle';
@@ -25,14 +25,37 @@ function Astroid(position, canvas, mass, angle) {
     y: 3
   }
   this.angle = 0;
-  this.radius  = 32;
+  this.mass = mass;
+  this.setProperties();
+}
+
+Astroid.prototype.setProperties = function(){
+  switch (this.mass) {
+    case 0:
+      this.radius = 16;
+      break;
+    case 1:
+      this.radius = 32;
+      break;
+  }
   this.height = this.radius*2;
   this.width = this.radius*2;
-  this.mass = mass;
+}
+
+Astroid.prototype.break = function(){
+  this.mass--;
+  if (this.mass < 0){
+    return true;
+  }
+  else{
+    this.status = 'breaking';
+    this.setProperties();
+    return false;
+  }
 }
 
 /**
- * @function updates the asteroid object
+ * @function updates the astroid object
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 Astroid.prototype.update = function(time) {
@@ -53,18 +76,20 @@ Astroid.prototype.update = function(time) {
 }
 
 /**
- * @function renders the asteroid into the provided context
+ * @function renders the astroid into the provided context
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Astroid.prototype.render = function(time, ctx) {
   // ctx.translate(this.position.x, this.position.y);
-  ctx.save()
+  ctx.save();
   ctx.beginPath();
   ctx.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI, false);
   ctx.fillStyle = 'rgba(0,0,0,0)';
   ctx.fill();
   ctx.strokeStyle = 'orange';
+  ctx.rect(this.position.x-this.radius, this.position.y-this.radius, this.width, this.height);
   ctx.stroke();
   ctx.restore();
+
   }
