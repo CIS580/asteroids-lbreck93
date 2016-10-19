@@ -9,6 +9,7 @@ const Astroid = require('./astroid.js')
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
+var destroyed = new Audio('assets/destroyed.m4a');
 var player = new Player({x: canvas.width/2, y: canvas.height/2}, canvas);
 var astroids = new Array();
 for (var i=0; i<10; i++){
@@ -89,6 +90,7 @@ function update(elapsedTime) {
         if (astroids[j].break()){
           astroids.splice(j, 1);
         }//end if astroid[j]
+        destroyed.play();
         console.log('astroids collided.');
       }//end collisioncheck
     }//end for-j-astroid
@@ -100,6 +102,7 @@ function update(elapsedTime) {
       if (astroids[i].break()){
         astroids.splice(i, 1);
       }//end if astroids is dead
+      destroyed.play();
       console.log('player killed by astroid.');
     }//end if-astroid hits player
   }//end for if astroid hits player

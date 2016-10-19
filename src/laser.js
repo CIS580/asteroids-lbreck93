@@ -15,6 +15,7 @@ module.exports = exports = Laser;
 function Laser(position, angle) {
     this.width = 3;
     this.height = 15;
+    this.sound = new Audio('assets/laser.m4a');
     this.position = {
         x: position.x,
         y: position.y
@@ -24,6 +25,7 @@ function Laser(position, angle) {
         y: Math.sin(angle)
     }
     this.state = 'hot';
+    this.sound.play();
   }
 
 /**
@@ -51,7 +53,7 @@ Laser.prototype.update = function(time){
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 Laser.prototype.render = function(time, ctx)
-{ 
+{
   ctx.save()
   // Draw a line for the laser
   ctx.strokeStyle = "green";
