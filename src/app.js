@@ -10,9 +10,12 @@ const Astroid = require('./astroid.js')
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 var destroyed = new Audio('assets/destroyed.m4a');
+var destroyedShip = new Audio('assets/destroyed-ship.m4a');
+var gameoverSound = new Audio('assets/gameover.m4a');
 var player = new Player({x: canvas.width/2, y: canvas.height/2}, canvas);
+var totalAstroids = 10;
 var astroids = new Array();
-for (var i=0; i<10; i++){
+for (var i=0; i<totalAstroids; i++){
   astroids.push(
     new Astroid(
       {x: getRand(0, canvas.width), y: getRand(0, canvas.height)},
@@ -43,14 +46,18 @@ function getRand(min, max){
   return Math.round(Math.random() * (max - min) + min);
 }
 
-function reset(){
-  player.reset();
-  for (var i=0; i<10; i++){
+function generateAstroids(){
+  for (var i=0; i<totalAstroids; i++){
     astroids.push(
       new Astroid(
         {x: getRand(0, canvas.width), y: getRand(0, canvas.height)},
          canvas, getRand(0, 1)));
   }
+}
+
+function reset(){
+  // player.reset();
+  generateAstroids();
 }
 
 /**
@@ -78,6 +85,17 @@ function update(elapsedTime) {
         console.log('player shot astroid');
         break;
       }//end if-collisionCheck
+      // else{
+      //   var temp = astroids[j];
+      //   temp.color = 'pink';
+      //   temp.position.x -= temp.radius/2;
+      //   temp.velocity.x -= temp.velocity.x/2;
+      //   temp.velocity.y -= temp.velocity.y/2;
+      //   astroids[j].x += astroids[j].radius/2;
+      //   // astroids[j].velocity.y = -astroids[j].velocity.y
+      //   // temp.velocity.x = -temp.velocity.x
+      //   astroids.push(temp)
+      // }
     }//end for-astroid array
   }//end for-laser array
 
@@ -102,13 +120,14 @@ function update(elapsedTime) {
       if (astroids[i].break()){
         astroids.splice(i, 1);
       }//end if astroids is dead
-      destroyed.play();
+      destroyedShip.play();
       console.log('player killed by astroid.');
     }//end if-astroid hits player
   }//end for if astroid hits player
 
   if (player.lives == player.deaths){
-    player = null;
+    player.position = null;
+    gameoverSound.play();
     console.log('gameover');
   }
 
@@ -131,7 +150,7 @@ function render(elapsedTime, ctx) {
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  if (player == null){
+  if (player.position == null){
     ctx.strokeStyle = 'white';
     ctx.font = "32px";
     ctx.strokeText('GAME OVER', canvas.width/2 - 40, canvas.height/2);

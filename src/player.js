@@ -28,6 +28,7 @@ function Player(position, canvas) {
     this.score = 0;
     this.angle = 0;
     this.radius = 20;
+    this.maxVelocity = 3;
     this.height = this.radius;
     this.width = this.radius;
     this.thrusting = false;
@@ -36,6 +37,7 @@ function Player(position, canvas) {
     this.lives = 3;
     this.deaths = 0;
     this.lasers = new Array();
+
 
     var self = this;
     window.onkeydown = function(event) {
@@ -103,7 +105,9 @@ function Player(position, canvas) {
 Player.prototype.death = function() {
     this.state = 'dead';
     this.deaths++;
+
     this.reset();
+
     if (this.lives == this.deaths) {
         return true
     }
@@ -114,9 +118,6 @@ Player.prototype.reset = function(){
   this.position = {x: this.worldWidth/2, y: this.worldHeight/2};
   this.velocity = {x: 0, y: 0};
   this.angle = 0;
-  this.thrusting = false;
-  this.steerRight = false;
-  this.steerLeft = false;
   this.lasers = new Array();
 }
 
@@ -138,8 +139,23 @@ Player.prototype.update = function(time) {
             x: Math.sin(this.angle),
             y: Math.cos(this.angle)
         }
-        this.velocity.x -= acceleration.x;
-        this.velocity.y -= acceleration.y;
+        if (this.velocity.x > this.maxVelocity){
+          this.velocity.x = this.maxVelocity;
+        }else if(this.velocity.x < -this.maxVelocity){
+          this.velocity.x = -this.maxVelocity
+        }
+        else{
+          this.velocity.x -= acceleration.x;
+        }
+
+        if (this.velocity.y > this.maxVelocity){
+          this.velocity.y = this.maxVelocity;
+        }else if(this.velocity.y < -this.maxVelocity){
+          this.velocity.y = -this.maxVelocity
+        }
+        else{
+          this.velocity.y -= acceleration.y;
+        }
     }
     // Apply velocity
     this.position.x += this.velocity.x;

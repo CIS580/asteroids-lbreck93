@@ -11,9 +11,12 @@ const Astroid = require('./astroid.js')
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 var destroyed = new Audio('assets/destroyed.m4a');
+var destroyedShip = new Audio('assets/destroyed-ship.m4a');
+var gameoverSound = new Audio('assets/gameover.m4a');
 var player = new Player({x: canvas.width/2, y: canvas.height/2}, canvas);
+var totalAstroids = 10;
 var astroids = new Array();
-for (var i=0; i<10; i++){
+for (var i=0; i<totalAstroids; i++){
   astroids.push(
     new Astroid(
       {x: getRand(0, canvas.width), y: getRand(0, canvas.height)},
@@ -44,14 +47,18 @@ function getRand(min, max){
   return Math.round(Math.random() * (max - min) + min);
 }
 
-function reset(){
-  player.reset();
-  for (var i=0; i<10; i++){
+function generateAstroids(){
+  for (var i=0; i<totalAstroids; i++){
     astroids.push(
       new Astroid(
         {x: getRand(0, canvas.width), y: getRand(0, canvas.height)},
          canvas, getRand(0, 1)));
   }
+}
+
+function reset(){
+  // player.reset();
+  generateAstroids();
 }
 
 /**
@@ -79,6 +86,17 @@ function update(elapsedTime) {
         console.log('player shot astroid');
         break;
       }//end if-collisionCheck
+      // else{
+      //   var temp = astroids[j];
+      //   temp.color = 'pink';
+      //   temp.position.x -= temp.radius/2;
+      //   temp.velocity.x -= temp.velocity.x/2;
+      //   temp.velocity.y -= temp.velocity.y/2;
+      //   astroids[j].x += astroids[j].radius/2;
+      //   // astroids[j].velocity.y = -astroids[j].velocity.y
+      //   // temp.velocity.x = -temp.velocity.x
+      //   astroids.push(temp)
+      // }
     }//end for-astroid array
   }//end for-laser array
 
@@ -103,13 +121,14 @@ function update(elapsedTime) {
       if (astroids[i].break()){
         astroids.splice(i, 1);
       }//end if astroids is dead
-      destroyed.play();
+      destroyedShip.play();
       console.log('player killed by astroid.');
     }//end if-astroid hits player
   }//end for if astroid hits player
 
   if (player.lives == player.deaths){
-    player = null;
+    player.position = null;
+    gameoverSound.play();
     console.log('gameover');
   }
 
@@ -132,7 +151,7 @@ function render(elapsedTime, ctx) {
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  if (player == null){
+  if (player.position == null){
     ctx.strokeStyle = 'white';
     ctx.font = "32px";
     ctx.strokeText('GAME OVER', canvas.width/2 - 40, canvas.height/2);
@@ -190,6 +209,7 @@ function Astroid(position, canvas, mass) {
   this.worldWidth = canvas.width;
   this.worldHeight = canvas.height;
   this.state = 'idle';
+  this.color = 'orange';
   var max = 5;
   var min = -5;
   this.position = {
@@ -225,8 +245,8 @@ Astroid.prototype.break = function(){
   }
   else{
     this.setProperties();
-    this.velocity.x = -this.velocity.x;
-    this.velocity.y = -this.velocity.y;
+    // this.velocity.x = -this.velocity.x;
+    // this.velocity.y = -this.velocity.y;
     return false;
   }
 }
@@ -264,7 +284,7 @@ Astroid.prototype.render = function(time, ctx) {
   ctx.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI, false);
   ctx.fillStyle = 'rgba(0,0,0,0)';
   ctx.fill();
-  ctx.strokeStyle = 'orange';
+  ctx.strokeStyle = this.color;
   // ctx.rect(this.position.x-this.radius, this.position.y-this.radius, this.width, this.height);
   ctx.stroke();
   ctx.restore();
@@ -428,6 +448,7 @@ function Player(position, canvas) {
     this.score = 0;
     this.angle = 0;
     this.radius = 20;
+    this.maxVelocity = 3;
     this.height = this.radius;
     this.width = this.radius;
     this.thrusting = false;
@@ -436,6 +457,7 @@ function Player(position, canvas) {
     this.lives = 3;
     this.deaths = 0;
     this.lasers = new Array();
+
 
     var self = this;
     window.onkeydown = function(event) {
@@ -503,7 +525,9 @@ function Player(position, canvas) {
 Player.prototype.death = function() {
     this.state = 'dead';
     this.deaths++;
+
     this.reset();
+
     if (this.lives == this.deaths) {
         return true
     }
@@ -514,9 +538,6 @@ Player.prototype.reset = function(){
   this.position = {x: this.worldWidth/2, y: this.worldHeight/2};
   this.velocity = {x: 0, y: 0};
   this.angle = 0;
-  this.thrusting = false;
-  this.steerRight = false;
-  this.steerLeft = false;
   this.lasers = new Array();
 }
 
@@ -538,8 +559,23 @@ Player.prototype.update = function(time) {
             x: Math.sin(this.angle),
             y: Math.cos(this.angle)
         }
-        this.velocity.x -= acceleration.x;
-        this.velocity.y -= acceleration.y;
+        if (this.velocity.x > this.maxVelocity){
+          this.velocity.x = this.maxVelocity;
+        }else if(this.velocity.x < -this.maxVelocity){
+          this.velocity.x = -this.maxVelocity
+        }
+        else{
+          this.velocity.x -= acceleration.x;
+        }
+
+        if (this.velocity.y > this.maxVelocity){
+          this.velocity.y = this.maxVelocity;
+        }else if(this.velocity.y < -this.maxVelocity){
+          this.velocity.y = -this.maxVelocity
+        }
+        else{
+          this.velocity.y -= acceleration.y;
+        }
     }
     // Apply velocity
     this.position.x += this.velocity.x;
