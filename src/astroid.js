@@ -16,13 +16,15 @@ function Astroid(position, canvas, mass) {
   this.worldWidth = canvas.width;
   this.worldHeight = canvas.height;
   this.state = 'idle';
+  var max = 5;
+  var min = -5;
   this.position = {
     x: position.x,
     y: position.y
   };
   this.velocity = {
-    x: 2,
-    y: 3
+    x: Math.round(Math.random() * (max - min) + min),
+    y: Math.round(Math.random() * (max - min) + min)
   }
   this.angle = 0;
   this.mass = mass;
@@ -48,8 +50,9 @@ Astroid.prototype.break = function(){
     return true;
   }
   else{
-    this.status = 'breaking';
     this.setProperties();
+    this.velocity.x = -this.velocity.x;
+    this.velocity.y = -this.velocity.y;
     return false;
   }
 }
@@ -88,7 +91,7 @@ Astroid.prototype.render = function(time, ctx) {
   ctx.fillStyle = 'rgba(0,0,0,0)';
   ctx.fill();
   ctx.strokeStyle = 'orange';
-  ctx.rect(this.position.x-this.radius, this.position.y-this.radius, this.width, this.height);
+  // ctx.rect(this.position.x-this.radius, this.position.y-this.radius, this.width, this.height);
   ctx.stroke();
   ctx.restore();
 

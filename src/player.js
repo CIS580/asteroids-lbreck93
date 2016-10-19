@@ -25,6 +25,7 @@ function Player(position, canvas) {
         x: 0,
         y: 0
     }
+    this.score = 0;
     this.angle = 0;
     this.radius = 20;
     this.height = this.radius;
@@ -102,6 +103,7 @@ function Player(position, canvas) {
 Player.prototype.death = function() {
     this.state = 'dead';
     this.deaths++;
+    this.reset();
     if (this.lives == this.deaths) {
         return true
     }

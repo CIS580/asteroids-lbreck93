@@ -11,7 +11,7 @@ var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 var player = new Player({x: canvas.width/2, y: canvas.height/2}, canvas);
 var astroids = new Array();
-for (var i=0; i<3; i++){
+for (var i=0; i<10; i++){
   astroids.push(
     new Astroid(
       {x: getRand(0, canvas.width), y: getRand(0, canvas.height)},
@@ -44,8 +44,12 @@ function getRand(min, max){
 
 function reset(){
   player.reset();
-  // astroids = new Astroid(
-  //   {x: getRand(0, canvas.width), y: getRand(0, canvas.height)}, canvas, 3);
+  for (var i=0; i<10; i++){
+    astroids.push(
+      new Astroid(
+        {x: getRand(0, canvas.width), y: getRand(0, canvas.height)},
+         canvas, getRand(0, 1)));
+  }
 }
 
 /**
@@ -69,10 +73,6 @@ function update(elapsedTime) {
         player.lasers.splice(i, 1);
         if (astroids[j].break()){
           astroids.splice(j, 1);
-        }
-        else{
-          astroids[j].velocity.x = -astroids[j].velocity.x;
-          astroids[j].velocity.y = -astroids[j].velocity.y;
         }//end collision check player-astroid
         console.log('player shot astroid');
         break;
@@ -80,29 +80,40 @@ function update(elapsedTime) {
     }//end for-astroid array
   }//end for-laser array
 
-  // if (collisionCheck(player, astroid)){
-  //     if (player.death()){
-  //       console.log('gameover');
-  //       return;
-  //     }
-  //     else{
-  //       console.log('contact!')
-  //       reset();
-  //
-  //     }
-  // }
-  // player.lasers.forEach(function(las){
-  //   // console.log(player.lasers);
-  //   if (collisionCheck(las, astroid)){
-  //     console.log('contact!');
-  //   }
-  //   else{
-  //     // console.log('no contact.');
-  //   }
-    // astroids.foreach(function(ast){
-    //   collisionCheck(las, ast);
-    // });
-// });
+  for(var i = 0; i < astroids.length; i++){
+    for (var j = i+1; j < astroids.length-1; j++){
+      if (collisionCheck(astroids[i], astroids[j])){
+        if (astroids[i].break()){
+          astroids.splice(i, 1);
+        }//end if astroid[i]
+        if (astroids[j].break()){
+          astroids.splice(j, 1);
+        }//end if astroid[j]
+        console.log('astroids collided.');
+      }//end collisioncheck
+    }//end for-j-astroid
+  }//end for-i-astroid
+
+  for(var i = 0; i < astroids.length; i++){
+    if (collisionCheck(player, astroids[i])){
+      player.death();
+      if (astroids[i].break()){
+        astroids.splice(i, 1);
+      }//end if astroids is dead
+      console.log('player killed by astroid.');
+    }//end if-astroid hits player
+  }//end for if astroid hits player
+
+  if (player.lives == player.deaths){
+    player = null;
+    console.log('gameover');
+  }
+
+  if (astroids.length == 0){
+    player.score++;
+    reset();
+  }
+
   // TODO: Update the game objects
 }
 
@@ -116,17 +127,24 @@ function update(elapsedTime) {
 function render(elapsedTime, ctx) {
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  player.render(elapsedTime, ctx);
+
+  if (player == null){
+    ctx.strokeStyle = 'white';
+    ctx.font = "32px";
+    ctx.strokeText('GAME OVER', canvas.width/2 - 40, canvas.height/2);
+  }
+  else{
+    player.render(elapsedTime, ctx);
+  }
+
   for(var i = 0; i < astroids.length; i++){
     astroids[i].render(elapsedTime, ctx);
   }
 
-  // astroid.render(elapsedTime, ctx);
-
   var padding = 33*player.lives;
   x = canvas.width-padding;
   y = canvas.height-30;
-  for (var i = 0; i < player.lives; i++){
+  for(var i = 0; i < player.lives; i++){
     ctx.beginPath();
     ctx.moveTo(x, y-10);
     ctx.lineTo(x-10, y+10);
@@ -142,5 +160,9 @@ function render(elapsedTime, ctx) {
 
     ctx.stroke();
     x = x + 35;
-  }
+  }//end drawing spaceships
+
+  ctx.font = "32px";
+  ctx.strokeText('Level: ' + player.score, 5, canvas.height - 30);
+  ctx.strokeText('Score: ' + player.score, 5, canvas.height - 10);
 }
